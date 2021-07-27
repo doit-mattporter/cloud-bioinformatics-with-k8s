@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fastqc
+spec:
+  ttlSecondsAfterFinished: 600
+  activeDeadlineSeconds: 3600
+  template:
+    spec:
+      containers:
+      - name: fastqc
+        image: ${AWSID}.dkr.ecr.${REGION}.amazonaws.com/fastqc
+        env:
+          - name: FASTQ
+            value: "s3://${INPUT_FILEPATH}"
+          - name: OUTPUT_S3
+            value: "s3://${OUTPUT_FILEPATH}"
+        command: ["/bin/bash", "-c"]
+        args: ["mkdir -p /data/tmp/; aws s3 cp $FASTQ /data/tmp/; fastqc /data/tmp/$(basename $FASTQ); rm -f /data/tmp/$(basename $FASTQ); zip -9 /data/$(basename ${FASTQ%.fastq.gz}).zip /data/tmp/$(basename ${FASTQ%.fastq.gz})*; aws s3 cp /data/$(basename ${FASTQ%.fastq.gz}).zip ${OUTPUT_S3%/}/"]
+      restartPolicy: Never
+  backoffLimit: 2

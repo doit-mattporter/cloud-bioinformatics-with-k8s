@@ -7,5 +7,5 @@ variable "eks_cluster_name" {
 variable "eks_version" {
   type        = string
   description = "EKS version to use"
-  default     = "1.20"
+  default     = "1.21"
 }

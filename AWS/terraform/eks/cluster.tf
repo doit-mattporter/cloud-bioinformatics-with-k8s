@@ -1,5 +1,16 @@
 locals {
   cluster_name = "bioinformatics-tasks"
+  userdata = <<-EOT
+  #!/bin/bash
+
+  set -o errexit
+  set -o pipefail
+  set -o nounset
+
+  yum install -y amazon-ssm-agent
+  systemctl enable amazon-ssm-agent
+  systemctl start amazon-ssm-agent
+  EOT
 }
 
 provider "aws" {
@@ -18,6 +29,10 @@ module "bioinformatics_cluster" {
 
   cluster_endpoint_private_access = true
   cluster_enabled_log_types       = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+
+  node_groups_defaults = {
+    pre_userdata = local.userdata
+  }
 
   workers_group_defaults = {
     root_volume_type = "gp2"

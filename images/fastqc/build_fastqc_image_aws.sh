@@ -23,5 +23,6 @@ fi
 AWSID=$(aws sts get-caller-identity --output text --query 'Account')
 
 aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $AWSID.dkr.ecr.$REGION.amazonaws.com
-docker build -t $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:0.11.9_x86 -t $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest .
+# docker build -t $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:0.11.9_x86 -t $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest .
+docker build --build-arg region=us-west-2 -t $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:0.11.9_x86 -t $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest .
 docker push $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc --all-tags

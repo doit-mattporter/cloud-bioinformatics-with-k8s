@@ -1,18 +1,3 @@
-locals {
-  cluster_name = "bioinformatics-tasks"
-  userdata = <<-EOT
-  #!/bin/bash
-
-  set -o errexit
-  set -o pipefail
-  set -o nounset
-
-  yum install -y amazon-ssm-agent
-  systemctl enable amazon-ssm-agent
-  systemctl start amazon-ssm-agent
-  EOT
-}
-
 provider "aws" {
   profile = "default"
   region  = data.terraform_remote_state.vpc.outputs.aws_region
@@ -30,10 +15,6 @@ module "bioinformatics_cluster" {
   cluster_endpoint_private_access = true
   cluster_enabled_log_types       = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
-  node_groups_defaults = {
-    pre_userdata = local.userdata
-  }
-
   workers_group_defaults = {
     root_volume_type = "gp2"
   }
@@ -50,22 +31,14 @@ module "bioinformatics_cluster" {
       kubelet_extra_args       = "--node-labels=node.kubernetes.io/lifecycle=spot"
     },
   ]
-
-  # worker_groups = [
-  #   {
-  #     name                          = "worker-group-1"
-  #     instance_type                 = "t2.small"
-  #     asg_desired_capacity          = 1
-  #   },
-  #   {
-  #     name                          = "worker-group-2"
-  #     instance_type                 = "t2.medium"
-  #     asg_desired_capacity          = 1
-  #   },
-  # ]
 }
 
 resource "aws_iam_role_policy_attachment" "s3-for-eks-bioinformatics-tasks" {
   role       = module.bioinformatics_cluster.worker_iam_role_name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "ssm-for-eks-bioinformatics-tasks" {
+  role       = module.bioinformatics_cluster.worker_iam_role_name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }

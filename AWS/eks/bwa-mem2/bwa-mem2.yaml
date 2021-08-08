@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: bwamem2-
+spec:
+  ttlSecondsAfterFinished: 600
+  activeDeadlineSeconds: 10800
+  template:
+    spec:
+      containers:
+      - name: bwamem2
+        image: ${AWSID}.dkr.ecr.${REGION}.amazonaws.com/bwa-mem2
+        resources:
+          requests:
+            memory: "128Gi"
+            cpu: "${cores}"
+          limits:
+            memory: "374Gi"
+            cpu: "${cores}"
+        env:
+          - name: fastq_r1_path
+            value: "${fastq_r1_path}"
+          - name: fastq_r2_path
+            value: "${fastq_r2_path}"
+          - name: reference_path
+            value: "${reference_path}"
+          - name: bam_fn
+            value: "${bam_fn}"
+          - name: output_path
+            value: "${output_path}"
+          - name: cores
+            value: "${cores}"
+        command: ["/usr/bin/align_fastq.sh"]
+      restartPolicy: Never
+  backoffLimit: 2

@@ -1,3 +1,5 @@
+ARG aws_region
+
 # Download the AWS CLI
 # FROM amazonlinux:2 as awscli
 # RUN yum update && \
@@ -17,7 +19,7 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.
     unzip /tmp/fastqc.zip -d / && \
     chmod +x /FastQC/fastqc
 
-# Install AWS CLI and FastQC binaries
+# Create FastQC image
 FROM amazonlinux:2
 # COPY --from=awscli /usr/local/aws-cli/v2/2.2.25/dist/ /usr/local/aws-cli/
 ENV aws_region_var=${aws_region}

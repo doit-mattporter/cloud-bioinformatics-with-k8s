@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: fastqc
+  generateName: fastqc-
 spec:
   ttlSecondsAfterFinished: 600
   activeDeadlineSeconds: 3600
@@ -10,6 +10,13 @@ spec:
       containers:
       - name: fastqc
         image: ${AWSID}.dkr.ecr.${REGION}.amazonaws.com/fastqc
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+          limits:
+            memory: "8Gi"
+            cpu: "2"
         env:
           - name: FASTQ
             value: "${INPUT_FILEPATH}"

@@ -13,7 +13,7 @@ aws eks update-kubeconfig --name bioinformatics-tasks
 # Replace variables in FastQC job and launch job
 # Region determination works on EC2, Cloudshell, and local dev env
 TOKEN=`curl -m 3 -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
-REGION=$(curl -m 3 -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region)
+REGION=`curl -m 3 -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region`
 if [ -z "$REGION" ]
 then
   REGION=$AWS_DEFAULT_REGION
@@ -24,8 +24,12 @@ then
 fi
 AWSID=$(aws sts get-caller-identity --output text --query 'Account')
 
-rm -f fastqc_substitution.yaml
+rm -f fastqc_substitution.yaml*
 cp fastqc.yaml fastqc_substitution.yaml
-sed -i -e "s|\\\${AWSID}|${AWSID}|g" -e "s|\\\${REGION}|${REGION}|g" -e "s|\\\${INPUT_FILEPATH}|${INPUT_FILEPATH}|g" -e "s|\\\${OUTPUT_FILEPATH}|${OUTPUT_FILEPATH}|g" fastqc_substitution.yaml
+sed -i .bak -e "s|\\\${AWSID}|${AWSID}|g" \
+           -e "s|\\\${REGION}|${REGION}|g" \
+           -e "s|\\\${INPUT_FILEPATH}|${INPUT_FILEPATH}|g" \
+           -e "s|\\\${OUTPUT_FILEPATH}|${OUTPUT_FILEPATH}|g" \
+           fastqc_substitution.yaml
 kubectl create -f fastqc_substitution.yaml
-rm -f fastqc_substitution.yaml
+rm -f fastqc_substitution.yaml*

@@ -15,7 +15,7 @@ spec:
             memory: "128Gi"
             cpu: "${cores}"
           limits:
-            memory: "374Gi"
+            memory: "256Gi"
             cpu: "${cores}"
         env:
           - name: fastq_r1_path

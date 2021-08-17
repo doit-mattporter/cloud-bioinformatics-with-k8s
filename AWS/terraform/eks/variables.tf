@@ -9,3 +9,9 @@ variable "eks_version" {
   description = "EKS version to use"
   default     = "1.21"
 }
+
+variable "argo_workflow_version" {
+  type        = string
+  description = "Argo Workflow version to use"
+  default     = "3.1.6"
+}

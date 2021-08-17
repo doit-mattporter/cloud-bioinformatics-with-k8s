@@ -6,6 +6,10 @@ data "aws_eks_cluster_auth" "cluster" {
   name = module.bioinformatics_cluster.cluster_id
 }
 
+data "http" "argo_workflow_manifest_url" {
+  url = "https://github.com/argoproj/argo-workflows/releases/download/v${var.argo_workflow_version}/install.yaml"
+}
+
 data "http" "cloudwatch_namespace_manifest_url" {
   url = "https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/cloudwatch-namespace.yaml"
 }

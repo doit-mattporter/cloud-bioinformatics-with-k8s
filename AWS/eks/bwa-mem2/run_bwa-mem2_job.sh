@@ -17,7 +17,7 @@ aws eks update-kubeconfig --name bioinformatics-tasks
 # Replace variables in BWA-MEM2 job and launch job
 # Region determination works on EC2, Cloudshell, and local dev env
 TOKEN=`curl -m 3 -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
-REGION=$(curl -m 3 -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region)
+REGION=`curl -m 3 -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r .region`
 if [ -z "$REGION" ]
 then
   REGION=$AWS_DEFAULT_REGION
@@ -35,16 +35,16 @@ AWSID=$(aws sts get-caller-identity --output text --query 'Account')
 # bwa-mem2 index -p hg38 /tmp/reference/Homo_sapiens_assembly38.fasta
 # s5cmd cp "/tmp/reference/hg38*" s3://your-reference-bucket/hg38/
 
-rm -f bwa-mem2_substitution.yaml
+rm -f bwa-mem2_substitution.yaml*
 cp bwa-mem2.yaml bwa-mem2_substitution.yaml
-sed -i -e "s|\\\${AWSID}|${AWSID}|g" \
-       -e "s|\\\${REGION}|${REGION}|g" \
-       -e "s|\\\${fastq_r1_path}|${fastq_r1_path}|g" \
-       -e "s|\\\${fastq_r2_path}|${fastq_r2_path}|g" \
-       -e "s|\\\${reference_path}|${reference_path}|g" \
-       -e "s|\\\${bam_fn}|${bam_fn}|g" \
-       -e "s|\\\${output_path}|${output_path}|g" \
-       -e "s|\\\${cores}|${cores}|g" \
-       bwa-mem2_substitution.yaml
+sed -i .bak -e "s|\\\${AWSID}|${AWSID}|g" \
+           -e "s|\\\${REGION}|${REGION}|g" \
+           -e "s|\\\${fastq_r1_path}|${fastq_r1_path}|g" \
+           -e "s|\\\${fastq_r2_path}|${fastq_r2_path}|g" \
+           -e "s|\\\${reference_path}|${reference_path}|g" \
+           -e "s|\\\${bam_fn}|${bam_fn}|g" \
+           -e "s|\\\${output_path}|${output_path}|g" \
+           -e "s|\\\${cores}|${cores}|g" \
+           bwa-mem2_substitution.yaml
 kubectl create -f bwa-mem2_substitution.yaml
-rm -f bwa-mem2_substitution.yaml
+rm -f bwa-mem2_substitution.yaml*

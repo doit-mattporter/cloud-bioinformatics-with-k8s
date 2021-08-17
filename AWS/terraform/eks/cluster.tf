@@ -26,9 +26,9 @@ module "bioinformatics_cluster" {
       override_instance_types  = ["m5.24xlarge", "r5.24xlarge"]
       spot_allocation_strategy = "lowest-price"
       spot_instance_pools      = 2
-      asg_min_size             = 0
+      asg_min_size             = 1
       asg_max_size             = 20
-      asg_desired_capacity     = 0
+      asg_desired_capacity     = 1
       kubelet_extra_args       = "--node-labels=node.kubernetes.io/lifecycle=spot"
     },
     {
@@ -37,9 +37,9 @@ module "bioinformatics_cluster" {
       override_instance_types  = ["m5.xlarge", "r5.xlarge"]
       spot_allocation_strategy = "lowest-price"
       spot_instance_pools      = 2
-      asg_min_size             = 0
+      asg_min_size             = 1
       asg_max_size             = 20
-      asg_desired_capacity     = 0
+      asg_desired_capacity     = 1
       kubelet_extra_args       = "--node-labels=node.kubernetes.io/lifecycle=spot"
     },
   ]

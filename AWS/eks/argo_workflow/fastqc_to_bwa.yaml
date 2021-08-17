@@ -1,0 +1,81 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: fastqc-to-bwa-mem2-workflow-
+spec:
+  entrypoint: fastqc-to-bwa-mem2
+  templates:
+  - name: fastqc
+    inputs:
+      parameters:
+      - name: INPUT_FILEPATH
+      - name: OUTPUT_FILEPATH
+    container:
+      image: "${AWSID}.dkr.ecr.${REGION}.amazonaws.com/fastqc"
+      resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+          limits:
+            memory: "8Gi"
+            cpu: "2"
+      env:
+        - name: FASTQ
+          value: "{{inputs.parameters.INPUT_FILEPATH}}"
+        - name: OUTPUT_S3
+          value: "{{inputs.parameters.OUTPUT_FILEPATH}}"
+      command: ["/bin/bash", "-c"]
+      # args: ["mkdir -p /data/tmp/; aws s3 cp $FASTQ /data/tmp/; fastqc /data/tmp/$(basename $FASTQ); rm -f /data/tmp/$(basename $FASTQ); zip -9 /data/$(basename ${FASTQ%.fastq.gz}).zip /data/tmp/$(basename ${FASTQ%.fastq.gz})*; aws s3 cp /data/$(basename ${FASTQ%.fastq.gz}).zip ${OUTPUT_S3%/}/"]
+      args: ["mkdir -p /data/tmp/; s5cmd cp \"$FASTQ\" /data/tmp/; fastqc /data/tmp/$(basename $FASTQ); rm -f /data/tmp/$(basename $FASTQ); zip -9 /data/$(basename ${FASTQ%.fastq.gz}).zip /data/tmp/$(basename ${FASTQ%.fastq.gz})*; s5cmd cp \"/data/$(basename ${FASTQ%.fastq.gz}).zip\" ${OUTPUT_S3%/}/"]
+  - name: bwa-mem2
+    inputs:
+      parameters:
+      - name: FASTQ_R1_PATH
+      - name: FASTQ_R2_PATH
+      - name: REFERENCE_PATH
+      - name: BAM_FN
+      - name: OUTPUT_PATH
+    container:
+      image: "${AWSID}.dkr.ecr.${REGION}.amazonaws.com/bwa-mem2"
+      resources:
+        requests:
+          memory: "128Gi"
+          cpu: "${CORES}"
+        limits:
+          memory: "256Gi"
+          cpu: "${CORES}"
+      env:
+        - name: fastq_r1_path
+          value: "{{inputs.parameters.FASTQ_R1_PATH}}"
+        - name: fastq_r2_path
+          value: "{{inputs.parameters.FASTQ_R2_PATH}}"
+        - name: reference_path
+          value: "{{inputs.parameters.REFERENCE_PATH}}"
+        - name: bam_fn
+          value: "{{inputs.parameters.BAM_FN}}"
+        - name: output_path
+          value: "{{inputs.parameters.OUTPUT_PATH}}"
+        - name: cores
+          value: "${CORES}"
+      command: ["/usr/bin/align_fastq.sh"]
+  - name: fastqc-to-bwa-mem2
+    dag:
+      tasks:
+      - name: fastqc-task
+        template: fastqc
+        arguments:
+          parameters: [
+            {name: INPUT_FILEPATH, value: "${INPUT_FILEPATH}"},
+            {name: OUTPUT_FILEPATH, value: "${OUTPUT_FILEPATH}"}
+          ]
+      - name: bwa-mem2-task
+        dependencies: [fastqc-task]
+        template: bwa-mem2
+        arguments:
+          parameters: [
+            {name: FASTQ_R1_PATH, value: "${FASTQ_R1_PATH}"},
+            {name: FASTQ_R2_PATH, value: "${FASTQ_R2_PATH}"},
+            {name: REFERENCE_PATH, value: "${REFERENCE_PATH}"},
+            {name: BAM_FN, value: "${BAM_FN}"},
+            {name: OUTPUT_PATH, value: "${OUTPUT_PATH}"}
+          ]

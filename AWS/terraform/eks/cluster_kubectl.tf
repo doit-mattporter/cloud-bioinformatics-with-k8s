@@ -9,6 +9,18 @@ resource "kubectl_manifest" "fluentbit_daemon" {
   yaml_body  = element(data.kubectl_file_documents.fluentbit_daemon_manifests.documents, count.index)
 }
 
+resource "kubectl_manifest" "argo_workflow" {
+  force_new          = true
+  override_namespace = "argo"
+  yaml_body          = data.http.argo_workflow_manifest_url.body
+}
+
+resource "kubernetes_namespace" "argo_ns" {
+  metadata {
+    name = "argo"
+  }
+}
+
 resource "kubernetes_config_map" "fluent-bit-cluster-info" {
   depends_on = [kubectl_manifest.cloudwatch_namespace]
   metadata {

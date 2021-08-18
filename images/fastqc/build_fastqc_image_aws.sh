@@ -3,11 +3,11 @@
 # Build FastQC Docker image
 
 # Install pre-requisites
-# sudo amazon-linux-extras install -y docker
-# sudo service docker start
-# sudo usermod -a -G docker ec2-user
-# sudo newgrp docker
-# sudo yum -y install jq
+sudo amazon-linux-extras install -y docker
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+sudo newgrp docker
+sudo yum -y install jq
 
 # Region determination works on EC2, Cloudshell, and local dev env
 TOKEN=`curl -m 3 -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`

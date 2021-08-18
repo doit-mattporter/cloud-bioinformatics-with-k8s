@@ -7,7 +7,12 @@ data "aws_eks_cluster_auth" "cluster" {
 }
 
 data "http" "argo_workflow_manifest_url" {
-  url = "https://github.com/argoproj/argo-workflows/releases/download/v${var.argo_workflow_version}/install.yaml"
+  url = "https://raw.githubusercontent.com/argoproj/argo-workflows/master/manifests/install.yaml"
+}
+
+# Manifests are split up
+data "kubectl_file_documents" "argo_workflow_manifests" {
+  content = data.http.argo_workflow_manifest_url.body
 }
 
 data "http" "cloudwatch_namespace_manifest_url" {

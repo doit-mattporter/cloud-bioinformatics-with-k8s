@@ -23,7 +23,7 @@ module "bioinformatics_cluster" {
     {
       name                     = "spot_large"
       root_volume_size         = 512
-      override_instance_types  = ["m5.24xlarge", "r5.24xlarge"]
+      override_instance_types  = ["m6i.24xlarge", "m5.24xlarge"]
       spot_allocation_strategy = "lowest-price"
       spot_instance_pools      = 2
       asg_min_size             = 1
@@ -34,7 +34,7 @@ module "bioinformatics_cluster" {
     {
       name                     = "spot_small"
       root_volume_size         = 512
-      override_instance_types  = ["m5.xlarge", "r5.xlarge"]
+      override_instance_types  = ["m6i.xlarge", "m5.xlarge", "r5.xlarge"]
       spot_allocation_strategy = "lowest-price"
       spot_instance_pools      = 2
       asg_min_size             = 1

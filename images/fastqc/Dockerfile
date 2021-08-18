@@ -35,6 +35,19 @@ RUN echo "region = ${aws_region_var}" >> ~/.aws/config
 RUN yum update -y && \
     yum install -y java-1.8.0-openjdk perl dejavu-sans-fonts zip
 
+# Run FastQC command
+RUN echo $'#!/bin/sh\n\
+    echo "FASTQ=${FASTQ}"\n\
+    echo "OUTPUT_PATH=${OUTPUT_PATH}"\n\
+    mkdir -p /data/tmp/\n\
+    s5cmd cp "$FASTQ" /data/tmp/\n\
+    fastqc /data/tmp/$(basename $FASTQ)\n\
+    rm -f /data/tmp/$(basename $FASTQ)\n\
+    zip -9 /data/$(basename ${FASTQ%.fastq.gz}).zip /data/tmp/$(basename ${FASTQ%.fastq.gz})*\n\
+    s5cmd cp "/data/$(basename ${FASTQ%.fastq.gz}).zip" ${OUTPUT_PATH%/}/\n' \
+    > /usr/bin/create_fastqc_report.sh && \
+    chmod +x /usr/bin/create_fastqc_report.sh
+
 ENV DISPLAY :0.0
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
@@ -42,10 +55,10 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 ENV PATH="/usr/local/FastQC/:${PATH}"
 # ENV PATH="/usr/local/aws-cli/:${PATH}"
 
-CMD ["/bin/bash"]
+CMD ["/usr/bin/create_fastqc_report.sh"]
 
 # Run with:
 # AWSID=$(aws sts get-caller-identity --output text --query 'Account')
 # FASTQ=s3://fastq-bucket/file.fastq
-# OUTPUT_S3=s3://output-report-bucket/
-# docker run -e FASTQ -e OUTPUT_S3 -v /root/:/data/ $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest /bin/bash -c "mkdir -p /data/tmp/; aws s3 cp $FASTQ /data/tmp/; fastqc /data/tmp/$(basename $FASTQ); rm -f /data/tmp/$(basename $FASTQ); zip -9 /data/$(basename ${FASTQ%.fastq.gz}).zip /data/tmp/$(basename ${FASTQ%.fastq.gz})*; aws s3 cp /data/$(basename ${FASTQ%.fastq.gz}).zip ${OUTPUT_S3%/}/"
+# OUTPUT_PATH=s3://output-report-bucket/
+# docker run -e FASTQ -e OUTPUT_PATH -v /root/:/data/ $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest

@@ -37,7 +37,7 @@ AWSID=$(aws sts get-caller-identity --output text --query 'Account')
 
 rm -f bwa-mem2_substitution.yaml*
 cp bwa-mem2.yaml bwa-mem2_substitution.yaml
-sed -i .bak -e "s|\\\${AWSID}|${AWSID}|g" \
+sed -i.bak -e "s|\\\${AWSID}|${AWSID}|g" \
            -e "s|\\\${REGION}|${REGION}|g" \
            -e "s|\\\${fastq_r1_path}|${fastq_r1_path}|g" \
            -e "s|\\\${fastq_r2_path}|${fastq_r2_path}|g" \

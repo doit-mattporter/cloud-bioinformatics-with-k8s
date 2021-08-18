@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 
 # FastQC: Define input and output filepaths
-INPUT_FILEPATH="s3://your-fastq-bucket/fastq_filepath.fastq.gz"
-OUTPUT_FILEPATH="s3://your-report-bucket/sample_name/"
+INPUT_FASTQ_R1="s3://your-fastq-bucket/fastq_filepath.fastq.gz"
+INPUT_FASTQ_R2="s3://your-fastq-bucket/fastq_filepath.fastq.gz"
+OUTPUT_FASTQC_PATH="s3://your-report-bucket/sample_name/"
 
 # BWA-MEM2: Define input and output filepaths
-FASTQ_R1_PATH="s3://your-fastq-bucket/your_fastq_R1.fastq.gz"
-FASTQ_R2_PATH="s3://your-fastq-bucket/your_fastq_R2.fastq.gz"
 REFERENCE_PATH="s3://your-reference-bucket/bwa_reference_prefix" # For example, s3://bucket/hg38
 BAM_FN="your_fastq.bam"
-OUTPUT_PATH="s3://your-alignment-bucket/BAMs/"
-CORES="95"
+OUTPUT_BAM_PATH="s3://your-alignment-bucket/BAMs/"
+CORES="94"
 
 # Install jq
 # sudo apt-get install jq
@@ -34,15 +33,14 @@ AWSID=$(aws sts get-caller-identity --output text --query 'Account')
 
 rm -f fastqc_to_bwa_substitution.yaml*
 cp fastqc_to_bwa.yaml fastqc_to_bwa_substitution.yaml
-sed -i .bak -e "s|\\\${AWSID}|${AWSID}|g" \
+sed -i.bak -e "s|\\\${AWSID}|${AWSID}|g" \
             -e "s|\\\${REGION}|${REGION}|g" \
-            -e "s|\\\${INPUT_FILEPATH}|${INPUT_FILEPATH}|g" \
-            -e "s|\\\${OUTPUT_FILEPATH}|${OUTPUT_FILEPATH}|g" \
-            -e "s|\\\${FASTQ_R1_PATH}|${FASTQ_R1_PATH}|g" \
-            -e "s|\\\${FASTQ_R2_PATH}|${FASTQ_R2_PATH}|g" \
+            -e "s|\\\${INPUT_FASTQ_R1}|${INPUT_FASTQ_R1}|g" \
+            -e "s|\\\${INPUT_FASTQ_R2}|${INPUT_FASTQ_R2}|g" \
+            -e "s|\\\${OUTPUT_FASTQC_PATH}|${OUTPUT_FASTQC_PATH}|g" \
             -e "s|\\\${REFERENCE_PATH}|${REFERENCE_PATH}|g" \
             -e "s|\\\${BAM_FN}|${BAM_FN}|g" \
-            -e "s|\\\${OUTPUT_PATH}|${OUTPUT_PATH}|g" \
+            -e "s|\\\${OUTPUT_BAM_PATH}|${OUTPUT_BAM_PATH}|g" \
             -e "s|\\\${CORES}|${CORES}|g" \
             fastqc_to_bwa_substitution.yaml
 cat fastqc_to_bwa_substitution.yaml

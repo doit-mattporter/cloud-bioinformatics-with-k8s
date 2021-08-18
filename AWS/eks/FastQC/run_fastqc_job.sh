@@ -26,7 +26,7 @@ AWSID=$(aws sts get-caller-identity --output text --query 'Account')
 
 rm -f fastqc_substitution.yaml*
 cp fastqc.yaml fastqc_substitution.yaml
-sed -i .bak -e "s|\\\${AWSID}|${AWSID}|g" \
+sed -i.bak -e "s|\\\${AWSID}|${AWSID}|g" \
            -e "s|\\\${REGION}|${REGION}|g" \
            -e "s|\\\${INPUT_FILEPATH}|${INPUT_FILEPATH}|g" \
            -e "s|\\\${OUTPUT_FILEPATH}|${OUTPUT_FILEPATH}|g" \

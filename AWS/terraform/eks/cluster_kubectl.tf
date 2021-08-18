@@ -10,9 +10,11 @@ resource "kubectl_manifest" "fluentbit_daemon" {
 }
 
 resource "kubectl_manifest" "argo_workflow" {
+  depends_on = [kubernetes_namespace.argo_ns]
   force_new          = true
   override_namespace = "argo"
-  yaml_body          = data.http.argo_workflow_manifest_url.body
+  count              = length(data.kubectl_file_documents.argo_workflow_manifests.documents)
+  yaml_body          = element(data.kubectl_file_documents.argo_workflow_manifests.documents, count.index)
 }
 
 resource "kubernetes_namespace" "argo_ns" {

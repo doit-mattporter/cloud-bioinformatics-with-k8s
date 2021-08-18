@@ -1,4 +1,5 @@
 ARG aws_region
+ARG gcp_region
 
 # Download the AWS CLI
 # FROM amazonlinux:2 as awscli
@@ -8,13 +9,27 @@ ARG aws_region
 #     unzip awscliv2.zip && \
 #     ./aws/install
 
+# Download gsutil
+FROM alpine:latest as gsutil
+RUN apk add python3
+RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-353.0.0-linux-x86_64.tar.gz -O /tmp/gsutil.tar.gz && \
+    tar -zxvf /tmp/gsutil.tar.gz -C /tmp/ && \
+    chmod +x /tmp/google-cloud-sdk/install.sh && \
+    /tmp/google-cloud-sdk/install.sh -q
+
 # Download s5cmd
 FROM alpine:latest as s5cmd
 RUN wget https://github.com/peak/s5cmd/releases/download/v1.3.0/s5cmd_1.3.0_Linux-64bit.tar.gz -O /tmp/s5cmd.tar.gz && \
     tar -zxvf /tmp/s5cmd.tar.gz -C /bin/
 
 # Create BWA-MEM2 image
+# Install gsutil and s5cmd
 FROM alpine:latest
+RUN apk add python3
+COPY --from=gsutil /tmp/google-cloud-sdk/ /usr/local/bin/google-cloud-sdk/
+ENV PATH $PATH:/usr/local/bin/google-cloud-sdk/bin
+ENV gcp_region_var=${gcp_region}
+RUN /usr/local/bin/google-cloud-sdk/bin/gcloud config set compute/region "${gcp_region_var}"
 # COPY --from=awscli /usr/local/aws-cli/v2/2.2.25/dist/ /usr/local/aws-cli/
 ENV aws_region_var=${aws_region}
 COPY --from=s5cmd /bin/s5cmd /usr/local/bin/
@@ -59,8 +74,14 @@ RUN echo $'#!/bin/sh\n\
     s5cmd cp -c ${cores} "${fastq_r1_path}" /data/tmp/fastq/\n\
     s5cmd cp -c ${cores} "${fastq_r2_path}" /data/tmp/fastq/\n\
     s5cmd cp -c ${cores} "${reference_path%\*}*" /data/tmp/reference/\n\
-    echo "bwa-mem2 mem -t ${cores} -K 100000000 -Y /data/tmp/reference/$(basename ${reference_path%\*}) /data/tmp/fastq/$(basename ${fastq_r1_path}) /data/tmp/fastq/$(basename ${fastq_r2_path}) | samtools sort -l9 -m1G -@${cores} -O bam -o /data/tmp/bam/${bam_fn} && s5cmd cp -c ${cores} \"/data/tmp/bam/${bam_fn}\" ${output_path}"\n\
-    bwa-mem2 mem -t ${cores} -K 100000000 -Y /data/tmp/reference/$(basename ${reference_path%\*}) /data/tmp/fastq/$(basename ${fastq_r1_path}) /data/tmp/fastq/$(basename ${fastq_r2_path}) | samtools sort -l9 -m1G -@${cores} -O bam -o /data/tmp/bam/${bam_fn} && s5cmd cp -c ${cores} \"/data/tmp/bam/${bam_fn}\" ${output_path}\n' \
+    echo "bwa-mem2 mem -t ${cores} -K 100000000 -Y /data/tmp/reference/$(basename ${reference_path%\*}) /data/tmp/fastq/$(basename ${fastq_r1_path}) /data/tmp/fastq/$(basename ${fastq_r2_path}) | samtools sort -l9 -m1G -@${cores} -O bam -o /data/tmp/bam/${bam_fn}"\n\
+    bwa-mem2 mem -t ${cores} -K 100000000 -Y /data/tmp/reference/$(basename ${reference_path%\*}) /data/tmp/fastq/$(basename ${fastq_r1_path}) /data/tmp/fastq/$(basename ${fastq_r2_path}) | samtools sort -l9 -m1G -@${cores} -O bam -o /data/tmp/bam/${bam_fn}\n\
+    if [[ ${output_path} =~ ^s3://.* ]]; then\n\
+    s5cmd cp -c ${cores} \"/data/tmp/bam/${bam_fn}\" ${output_path}\n\
+    fi\n\
+    if [[ ${output_path} =~ ^gs://.* ]]; then\n\
+    gsutil -o GSUtil:parallel_composite_upload_threshold=150M cp \"/data/tmp/bam/${bam_fn}\" ${output_path}\n\
+    fi\n'\
     > /usr/bin/align_fastq.sh && \
     chmod +x /usr/bin/align_fastq.sh
 
@@ -74,6 +95,11 @@ CMD ["/usr/bin/align_fastq.sh"]
 
 # Run with:
 # AWSID=$(aws sts get-caller-identity --output text --query 'Account')
-# FASTQ=s3://fastq-bucket/file.fastq
-# OUTPUT_S3=s3://output-alignment-bucket/
-# docker run -e FASTQ -e OUTPUT_S3 -v /root/:/data/ $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest /bin/bash -c "mkdir -p /data/tmp/; aws s3 cp $FASTQ /data/tmp/; fastqc /data/tmp/$(basename $FASTQ); rm -f /data/tmp/$(basename $FASTQ); zip -9 /data/$(basename ${FASTQ%.fastq.gz}).zip /data/tmp/$(basename ${FASTQ%.fastq.gz})*; aws s3 cp /data/$(basename ${FASTQ%.fastq.gz}).zip ${OUTPUT_S3%/}/"
+# REGION=your-region-2
+# fastq_r1_path="s3://your-fastq-bucket/your_fastq_R1.fastq.gz"
+# fastq_r2_path="s3://your-fastq-bucket/your_fastq_R2.fastq.gz"
+# reference_path="s3://your-reference-bucket/bwa_reference_prefix" # For example, s3://bucket/hg38
+# bam_fn="your_fastq.bam"
+# output_path="s3://your-alignment-bucket/BAMs/"
+# cores=32
+# docker run -e FASTQ -e OUTPUT_PATH -v /root/:/data/ $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest

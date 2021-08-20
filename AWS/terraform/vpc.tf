@@ -16,7 +16,7 @@ locals {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "3.1.0"
+  version = "3.6.0"
 
   name            = "eks_vpc"
   cidr            = var.eks_vpc_cidr
@@ -24,11 +24,13 @@ module "vpc" {
   private_subnets = [for k, v in local.available_azs : cidrsubnet(var.eks_vpc_cidr, 8, k)]
   public_subnets  = [for k, v in local.available_azs : cidrsubnet(var.eks_vpc_cidr, 8, "${length(local.available_azs) + k}")]
 
-  enable_ipv6                                    = true
-  assign_ipv6_address_on_creation                = true
-  private_subnet_assign_ipv6_address_on_creation = true
-  public_subnet_ipv6_prefixes                    = range(length(local.available_azs))
-  private_subnet_ipv6_prefixes                   = range(length(local.available_azs), "${2 * length(local.available_azs)}")
+  # Enabling IPv6 sometimes breaks EC2 instances' ability to join EKS. Sometimes it doesn't!
+  # Either EKS or Terraform seems to struggle with full support for IPv6 so I leave it in for future use but commented out for now.
+  # enable_ipv6                                    = true
+  # assign_ipv6_address_on_creation                = true
+  # private_subnet_assign_ipv6_address_on_creation = true
+  # public_subnet_ipv6_prefixes                    = range(length(local.available_azs))
+  # private_subnet_ipv6_prefixes                   = range(length(local.available_azs), "${2 * length(local.available_azs)}")
 
   enable_nat_gateway   = true
   single_nat_gateway   = true

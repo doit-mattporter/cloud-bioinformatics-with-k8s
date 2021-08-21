@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: fastqc-
+spec:
+  ttlSecondsAfterFinished: 600
+  activeDeadlineSeconds: 3600
+  template:
+    spec:
+      containers:
+      - name: fastqc
+        image: us.gcr.io/${GCP_PROJECT_ID}/fastqc
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "1"
+          limits:
+            memory: "12Gi"
+            cpu: "1"
+        env:
+          - name: FASTQ
+            value: "${INPUT_FILEPATH}"
+          - name: OUTPUT_PATH
+            value: "${OUTPUT_FILEPATH}"
+      restartPolicy: Never
+  backoffLimit: 2

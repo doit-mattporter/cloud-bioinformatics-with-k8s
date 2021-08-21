@@ -1,4 +1,5 @@
 ARG aws_region
+ARG gcp_region
 
 # Download the AWS CLI
 # FROM amazonlinux:2 as awscli
@@ -19,11 +20,26 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.
     unzip /tmp/fastqc.zip -d / && \
     chmod +x /FastQC/fastqc
 
+# Download gsutil
+FROM alpine:latest as gsutil
+RUN apk add python3
+RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-353.0.0-linux-x86_64.tar.gz -O /tmp/gsutil.tar.gz && \
+    tar -zxvf /tmp/gsutil.tar.gz -C /tmp/ && \
+    chmod +x /tmp/google-cloud-sdk/install.sh && \
+    /tmp/google-cloud-sdk/install.sh -q
+
 # Create FastQC image
 FROM amazonlinux:2
+# Install gsutil
+RUN yum install -y python3
+COPY --from=gsutil /tmp/google-cloud-sdk/ /usr/local/bin/google-cloud-sdk/
+ENV PATH $PATH:/usr/local/bin/google-cloud-sdk/bin
+ENV gcp_region_var=${gcp_region}
+RUN /usr/local/bin/google-cloud-sdk/bin/gcloud config set compute/region "${gcp_region_var}"
+# Install AWS CLI / s5cmd
 # COPY --from=awscli /usr/local/aws-cli/v2/2.2.25/dist/ /usr/local/aws-cli/
-ENV aws_region_var=${aws_region}
 COPY --from=s5cmd /bin/s5cmd /usr/local/bin/
+ENV aws_region_var=${aws_region}
 COPY --from=fastqc /FastQC/ /usr/local/FastQC/
 
 # Set us-west-2 as the default for s5cmd
@@ -40,11 +56,21 @@ RUN echo $'#!/bin/sh\n\
     echo "FASTQ=${FASTQ}"\n\
     echo "OUTPUT_PATH=${OUTPUT_PATH}"\n\
     mkdir -p /data/tmp/\n\
+    if [[ ${OUTPUT_PATH} =~ ^s3://.* ]]; then\n\
     s5cmd cp "$FASTQ" /data/tmp/\n\
+    fi\n\
+    if [[ ${OUTPUT_PATH} =~ ^gs://.* ]]; then\n\
+    gsutil -o GSUtil:parallel_composite_upload_threshold=150M cp "$FASTQ" /data/tmp/\n\
+    fi\n\
     fastqc /data/tmp/$(basename $FASTQ)\n\
     rm -f /data/tmp/$(basename $FASTQ)\n\
     zip -9 /data/$(basename ${FASTQ%.fastq.gz}).zip /data/tmp/$(basename ${FASTQ%.fastq.gz})*\n\
-    s5cmd cp "/data/$(basename ${FASTQ%.fastq.gz}).zip" ${OUTPUT_PATH%/}/\n' \
+    if [[ ${OUTPUT_PATH} =~ ^s3://.* ]]; then\n\
+    s5cmd cp "/data/$(basename ${FASTQ%.fastq.gz}).zip" ${OUTPUT_PATH%/}/\n \
+    fi\n\
+    if [[ ${OUTPUT_PATH} =~ ^gs://.* ]]; then\n\
+    gsutil cp "/data/$(basename ${FASTQ%.fastq.gz}).zip" ${OUTPUT_PATH%/}/\n \
+    fi\n' \
     > /usr/bin/create_fastqc_report.sh && \
     chmod +x /usr/bin/create_fastqc_report.sh
 
@@ -56,9 +82,3 @@ ENV PATH="/usr/local/FastQC/:${PATH}"
 # ENV PATH="/usr/local/aws-cli/:${PATH}"
 
 CMD ["/usr/bin/create_fastqc_report.sh"]
-
-# Run with:
-# AWSID=$(aws sts get-caller-identity --output text --query 'Account')
-# FASTQ=s3://fastq-bucket/file.fastq
-# OUTPUT_PATH=s3://output-report-bucket/
-# docker run -e FASTQ -e OUTPUT_PATH -v /root/:/data/ $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest

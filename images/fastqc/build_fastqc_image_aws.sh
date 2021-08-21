@@ -29,3 +29,9 @@ docker build --build-arg region=$REGION \
     -t $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:0.11.9_x86 \
     -t $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest .
 docker push $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc --all-tags
+
+# Run with:
+# AWSID=$(aws sts get-caller-identity --output text --query 'Account')
+# FASTQ=s3://fastq-bucket/file.fastq
+# OUTPUT_PATH=s3://output-report-bucket/
+# docker run -e FASTQ -e OUTPUT_PATH -v /root/:/data/ $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest

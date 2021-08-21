@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: bwamem2-
+spec:
+  ttlSecondsAfterFinished: 600
+  activeDeadlineSeconds: 10800
+  template:
+    spec:
+      containers:
+      - name: bwamem2
+        image: us.gcr.io/${GCP_PROJECT_ID}/bwa-mem2
+        resources:
+          requests:
+            memory: "30Gi"
+            cpu: "${cores}"
+          limits:
+            memory: "100Gi"
+            cpu: "${cores}"
+        env:
+          - name: fastq_r1_path
+            value: "${fastq_r1_path}"
+          - name: fastq_r2_path
+            value: "${fastq_r2_path}"
+          - name: reference_path
+            value: "${reference_path}"
+          - name: bam_fn
+            value: "${bam_fn}"
+          - name: output_path
+            value: "${output_path}"
+          - name: cores
+            value: "${cores}"
+      restartPolicy: Never
+  backoffLimit: 2

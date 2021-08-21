@@ -15,7 +15,12 @@ resource "google_container_cluster" "bioinformatics_tasks" {
   location         = var.gcp_region
   enable_autopilot = true
   node_config {
-    disk_size_gb = 512
-    preemptible  = true
+    disk_size_gb    = 512
+    preemptible     = true
+    service_account = google_service_account.gke_default_sa.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
   }
 }

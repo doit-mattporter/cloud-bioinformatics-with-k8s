@@ -3,8 +3,8 @@
 # Build FastQC Docker image on CentOS 8
 
 # Install pre-requisites
- sudo yum install -y yum-utils
- sudo yum-config-manager \
+sudo yum install -y yum-utils
+sudo yum-config-manager \
     --add-repo \
     https://download.docker.com/linux/centos/docker-ce.repo
 sudo yum -y install docker-ce docker-ce-cli containerd.io
@@ -33,3 +33,9 @@ docker build \
     -t us.gcr.io/$GCP_PROJECT_ID/fastqc:latest \
     .
 docker push us.gcr.io/$GCP_PROJECT_ID/fastqc --all-tags
+
+# Run with:
+# GCP_PROJECT_ID=`gcloud config list --format 'value(core.project)' 2>/dev/null`
+# FASTQ=gcs://fastq-bucket/file.fastq
+# OUTPUT_PATH=gcs://output-report-bucket/
+# docker run -e FASTQ -e OUTPUT_PATH -v /root/:/data/ us.gcr.io/$GCP_PROJECT_ID/fastqc

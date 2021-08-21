@@ -92,14 +92,3 @@ RUN rm -rf /var/cache/apk/*
 RUN rm -rf /tmp/*
 
 CMD ["/usr/bin/align_fastq.sh"]
-
-# Run with:
-# AWSID=$(aws sts get-caller-identity --output text --query 'Account')
-# REGION=your-region-2
-# fastq_r1_path="s3://your-fastq-bucket/your_fastq_R1.fastq.gz"
-# fastq_r2_path="s3://your-fastq-bucket/your_fastq_R2.fastq.gz"
-# reference_path="s3://your-reference-bucket/bwa_reference_prefix" # For example, s3://bucket/hg38
-# bam_fn="your_fastq.bam"
-# output_path="s3://your-alignment-bucket/BAMs/"
-# cores=32
-# docker run -e FASTQ -e OUTPUT_PATH -v /root/:/data/ $AWSID.dkr.ecr.$REGION.amazonaws.com/fastqc:latest

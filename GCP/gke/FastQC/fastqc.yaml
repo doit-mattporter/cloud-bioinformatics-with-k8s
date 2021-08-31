@@ -2,11 +2,13 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   generateName: fastqc-
+  namespace: biojobs
 spec:
   ttlSecondsAfterFinished: 600
   activeDeadlineSeconds: 3600
   template:
     spec:
+      serviceAccountName: biojobs-sa
       containers:
       - name: fastqc
         image: us.gcr.io/${GCP_PROJECT_ID}/fastqc

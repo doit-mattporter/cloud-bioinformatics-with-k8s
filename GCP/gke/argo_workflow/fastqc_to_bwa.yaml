@@ -2,7 +2,9 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: fastqc-to-bwa-mem2-workflow-
+  namespace: biojobs
 spec:
+  serviceAccountName: biojobs-sa
   entrypoint: fastqc-to-bwa-mem2
   templates:
   - name: fastqc

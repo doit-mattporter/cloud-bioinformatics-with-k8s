@@ -2,11 +2,13 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   generateName: bwamem2-
+  namespace: biojobs
 spec:
   ttlSecondsAfterFinished: 600
   activeDeadlineSeconds: 10800
   template:
     spec:
+      serviceAccountName: biojobs-sa
       containers:
       - name: bwamem2
         image: us.gcr.io/${GCP_PROJECT_ID}/bwa-mem2

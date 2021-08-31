@@ -11,3 +11,20 @@ resource "kubernetes_namespace" "argo_ns" {
     name = "argo"
   }
 }
+
+resource "kubernetes_namespace" "biojobs" {
+  metadata {
+    name = "biojobs"
+  }
+}
+
+resource "kubernetes_service_account" "biojobs-sa" {
+  depends_on = [kubernetes_namespace.biojobs]
+  metadata {
+    name      = "biojobs-sa"
+    namespace = "biojobs"
+    annotations = {
+      "iam.gke.io/gcp-service-account" : "${google_service_account.gke_bioinformatics_sa.name}@${var.gcp_project_id}"
+    }
+  }
+}

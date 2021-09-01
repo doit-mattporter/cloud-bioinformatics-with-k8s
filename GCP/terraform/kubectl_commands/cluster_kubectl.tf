@@ -3,7 +3,6 @@
 # https://itnext.io/terraform-dont-use-kubernetes-provider-with-your-cluster-resource-d8ec5319d14a
 
 resource "kubectl_manifest" "argo_workflow" {
-  # depends_on         = [kubernetes_namespace.argo_ns]
   force_new          = true
   override_namespace = "argo"
   count              = length(data.kubectl_file_documents.argo_workflow_manifests.documents)
@@ -23,12 +22,11 @@ resource "kubernetes_namespace" "biojobs" {
 }
 
 resource "kubernetes_service_account" "biojobs-sa" {
-  # depends_on = [kubernetes_namespace.biojobs]
   metadata {
     name      = "biojobs-sa"
     namespace = "biojobs"
     annotations = {
-      "iam.gke.io/gcp-service-account" : "${data.terraform_remote_state.gke.outputs.gke_cluster_bioinformatics_sa.name}@${data.terraform_remote_state.gke.outputs.gcp_project_id}"
+      "iam.gke.io/gcp-service-account" : data.terraform_remote_state.gke.outputs.gke_cluster_bioinformatics_sa_email
     }
   }
 }

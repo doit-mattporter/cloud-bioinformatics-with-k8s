@@ -23,7 +23,8 @@ terraform {
 }
 
 data "terraform_remote_state" "gke" {
-  backend "gcs" {
+  backend = "gcs"
+  config = {
     bucket = "doit-matt-tf-state-test"
     prefix = "prod/terraform"
   }

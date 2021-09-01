@@ -1,6 +1,7 @@
 # GCP variables
 variable "gcp_project_id" {
   type        = string
+  default     = "doit-matt-gke-test"
   description = "GCP Project ID"
 }
 

@@ -15,9 +15,11 @@ spec:
         resources:
           requests:
             memory: "30Gi"
+            ephemeral-storage: "512Gi"
             cpu: "${cores}"
           limits:
-            memory: "100Gi"
+            memory: "80Gi"
+            ephemeral-storage: "512Gi"
             cpu: "${cores}"
         env:
           - name: fastq_r1_path

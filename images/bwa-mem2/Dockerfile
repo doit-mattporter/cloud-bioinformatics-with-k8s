@@ -11,7 +11,7 @@ ARG gcp_region
 
 # Download gsutil
 FROM alpine:latest as gsutil
-RUN apk add python3
+RUN apk add python3 py3-crcmod
 RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-353.0.0-linux-x86_64.tar.gz -O /tmp/gsutil.tar.gz && \
     tar -zxvf /tmp/gsutil.tar.gz -C /tmp/ && \
     chmod +x /tmp/google-cloud-sdk/install.sh && \
@@ -25,7 +25,7 @@ RUN wget https://github.com/peak/s5cmd/releases/download/v1.3.0/s5cmd_1.3.0_Linu
 # Create BWA-MEM2 image
 # Install gsutil and s5cmd
 FROM alpine:latest
-RUN apk add python3
+RUN apk add python3 py3-crcmod
 COPY --from=gsutil /tmp/google-cloud-sdk/ /usr/local/bin/google-cloud-sdk/
 ENV PATH $PATH:/usr/local/bin/google-cloud-sdk/bin
 ENV gcp_region_var=${gcp_region}
@@ -71,9 +71,16 @@ RUN echo $'#!/bin/sh\n\
     mkdir -p /data/tmp/fastq/\n\
     mkdir -p /data/tmp/reference/\n\
     mkdir -p /data/tmp/bam/\n\
+    if [[ ${output_path} =~ ^s3://.* ]]; then\n\
     s5cmd cp -c ${cores} "${fastq_r1_path}" /data/tmp/fastq/\n\
     s5cmd cp -c ${cores} "${fastq_r2_path}" /data/tmp/fastq/\n\
     s5cmd cp -c ${cores} "${reference_path%\*}*" /data/tmp/reference/\n\
+    fi\n\
+    if [[ ${output_path} =~ ^gs://.* ]]; then\n\
+    gsutil -o GSUtil:parallel_composite_upload_threshold=150M cp "${fastq_r1_path}" /data/tmp/fastq/\n\
+    gsutil -o GSUtil:parallel_composite_upload_threshold=150M cp "${fastq_r2_path}" /data/tmp/fastq/\n\
+    gsutil -o GSUtil:parallel_composite_upload_threshold=150M cp "${reference_path%\*}*" /data/tmp/reference/\n\
+    fi\n\
     echo "bwa-mem2 mem -t ${cores} -K 100000000 -Y /data/tmp/reference/$(basename ${reference_path%\*}) /data/tmp/fastq/$(basename ${fastq_r1_path}) /data/tmp/fastq/$(basename ${fastq_r2_path}) | samtools sort -l9 -m1G -@${cores} -O bam -o /data/tmp/bam/${bam_fn}"\n\
     bwa-mem2 mem -t ${cores} -K 100000000 -Y /data/tmp/reference/$(basename ${reference_path%\*}) /data/tmp/fastq/$(basename ${fastq_r1_path}) /data/tmp/fastq/$(basename ${fastq_r2_path}) | samtools sort -l9 -m1G -@${cores} -O bam -o /data/tmp/bam/${bam_fn}\n\
     if [[ ${output_path} =~ ^s3://.* ]]; then\n\

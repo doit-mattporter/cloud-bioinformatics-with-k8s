@@ -4,7 +4,7 @@ resource "google_service_account" "gke_cluster_bioinformatics_sa" {
 }
 
 resource "google_service_account_iam_binding" "associate-workload-identity-user" {
-  service_account_id = google_service_account.gke_cluster_bioinformatics_sa.email
+  service_account_id = google_service_account.gke_cluster_bioinformatics_sa.id
   role               = "roles/iam.workloadIdentityUser"
 
   members = [

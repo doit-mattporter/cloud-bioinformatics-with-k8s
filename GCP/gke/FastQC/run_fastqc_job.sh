@@ -4,9 +4,6 @@
 INPUT_FILEPATH="s3://your-fastq-bucket/fastq_filepath.fastq.gz"
 OUTPUT_FILEPATH="s3://your-report-bucket/sample_name/"
 
-# Install jq
-# sudo apt-get install jq
-
 # Authenticate kubectl with EKS cluster
 # Region and project determination works on GCE, Cloud Shell, and local dev env
 GCP_ZONE=`curl http://metadata.google.internal/computeMetadata/v1/instance/zone -H Metadata-Flavor:Google | cut -f4 -d'/'`

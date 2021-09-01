@@ -22,7 +22,7 @@ RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.
 
 # Download gsutil
 FROM alpine:latest as gsutil
-RUN apk add python3
+RUN apk add python3 py3-crcmod
 RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-353.0.0-linux-x86_64.tar.gz -O /tmp/gsutil.tar.gz && \
     tar -zxvf /tmp/gsutil.tar.gz -C /tmp/ && \
     chmod +x /tmp/google-cloud-sdk/install.sh && \

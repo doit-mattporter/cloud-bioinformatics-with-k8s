@@ -15,9 +15,11 @@ spec:
         resources:
           requests:
             memory: "4Gi"
+            ephemeral-storage: "250Gi"
             cpu: "1"
           limits:
             memory: "12Gi"
+            ephemeral-storage: "250Gi"
             cpu: "1"
         env:
           - name: FASTQ

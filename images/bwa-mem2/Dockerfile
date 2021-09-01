@@ -79,7 +79,7 @@ RUN echo $'#!/bin/sh\n\
     if [[ ${output_path} =~ ^gs://.* ]]; then\n\
     gsutil -o GSUtil:parallel_composite_upload_threshold=150M cp "${fastq_r1_path}" /data/tmp/fastq/\n\
     gsutil -o GSUtil:parallel_composite_upload_threshold=150M cp "${fastq_r2_path}" /data/tmp/fastq/\n\
-    gsutil -o GSUtil:parallel_composite_upload_threshold=150M cp "${reference_path%\*}*" /data/tmp/reference/\n\
+    gsutil -m -o GSUtil:parallel_composite_upload_threshold=150M cp "${reference_path%\*}*" /data/tmp/reference/\n\
     fi\n\
     echo "bwa-mem2 mem -t ${cores} -K 100000000 -Y /data/tmp/reference/$(basename ${reference_path%\*}) /data/tmp/fastq/$(basename ${fastq_r1_path}) /data/tmp/fastq/$(basename ${fastq_r2_path}) | samtools sort -l9 -m1G -@${cores} -O bam -o /data/tmp/bam/${bam_fn}"\n\
     bwa-mem2 mem -t ${cores} -K 100000000 -Y /data/tmp/reference/$(basename ${reference_path%\*}) /data/tmp/fastq/$(basename ${fastq_r1_path}) /data/tmp/fastq/$(basename ${fastq_r2_path}) | samtools sort -l9 -m1G -@${cores} -O bam -o /data/tmp/bam/${bam_fn}\n\

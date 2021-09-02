@@ -6,7 +6,7 @@ fastq_r2_path="gs://your-fastq-bucket/your_fastq_R2.fastq.gz"
 reference_path="gs://your-reference-bucket/bwa_reference_prefix" # For example, gs://bucket/hg38
 bam_fn="your_fastq.bam"
 output_path="gs://your-alignment-bucket/BAMs/"
-cores=28
+cores=31
 
 # Replace variables in BWA-MEM2 job and launch job
 # Region and project determination works on GCE, Cloud Shell, and local dev env

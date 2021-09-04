@@ -15,7 +15,7 @@ resource "kubernetes_namespace" "argo_ns" {
   }
 }
 
-resource "kubernetes_namespace" "biojobs" {
+resource "kubernetes_namespace" "biojobs_ns" {
   metadata {
     name = "biojobs"
   }

@@ -6,6 +6,14 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 3.57.0"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.4.1"
+    }
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = "= 1.11.3"
+    }
   }
 
   backend "s3" {

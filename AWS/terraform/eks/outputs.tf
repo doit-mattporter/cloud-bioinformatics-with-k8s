@@ -20,5 +20,5 @@ output "eks_cluster_name" {
 
 output "eks_cluster_ca_certificate" {
   description = "EKS cluster Certificate Authority Certificate"
-  value = module.bioinformatics_cluster.cluster_certificate_authority_data
+  value       = module.bioinformatics_cluster.cluster_certificate_authority_data
 }

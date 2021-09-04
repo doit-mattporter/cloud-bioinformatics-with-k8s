@@ -16,7 +16,7 @@ locals {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "3.6.0"
+  version = "3.7.0"
 
   name            = "eks_vpc"
   cidr            = var.eks_vpc_cidr
@@ -35,6 +35,7 @@ module "vpc" {
   enable_nat_gateway   = true
   single_nat_gateway   = true
   enable_dns_hostnames = true
+  enable_dns_support   = true
 
   tags = {
     "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"

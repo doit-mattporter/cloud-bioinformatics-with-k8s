@@ -28,6 +28,12 @@ resource "kubernetes_namespace" "argo_ns" {
   }
 }
 
+resource "kubernetes_namespace" "biojobs_ns" {
+  metadata {
+    name = "biojobs"
+  }
+}
+
 resource "kubernetes_config_map" "fluent-bit-cluster-info" {
   depends_on = [kubectl_manifest.cloudwatch_namespace]
   metadata {

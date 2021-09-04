@@ -1,3 +1,8 @@
+provider "aws" {
+  profile = "default"
+  region  = data.terraform_remote_state.eks.outputs.aws_region
+}
+
 resource "kubectl_manifest" "cloudwatch_namespace" {
   force_new = true
   yaml_body = data.http.cloudwatch_namespace_manifest_url.body
@@ -31,11 +36,11 @@ resource "kubernetes_config_map" "fluent-bit-cluster-info" {
   }
 
   data = {
-    "cluster.name" = var.eks_cluster_name
+    "cluster.name" = data.terraform_remote_state.eks.outputs.eks_cluster_name
     "http.server"  = "On"
     "http.port"    = "2020"
     "read.head"    = "Off"
     "read.tail"    = "On"
-    "logs.region"  = data.terraform_remote_state.vpc.outputs.aws_region
+    "logs.region"  = data.terraform_remote_state.eks.outputs.aws_region
   }
 }

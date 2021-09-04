@@ -34,7 +34,7 @@ resource "google_container_node_pool" "ephemeral_highcpu_preemptible_node_pool" 
   node_count = 1
 
   node_config {
-    preemptible  = false
+    preemptible  = true
     machine_type = "n2-standard-32"
     disk_size_gb = 600
     shielded_instance_config {

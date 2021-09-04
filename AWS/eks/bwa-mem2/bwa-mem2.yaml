@@ -2,6 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   generateName: bwamem2-
+  namespace: biojobs
 spec:
   ttlSecondsAfterFinished: 600
   activeDeadlineSeconds: 10800
@@ -13,9 +14,11 @@ spec:
         resources:
           requests:
             memory: "30Gi"
+            ephemeral-storage: "350Gi"
             cpu: "${cores}"
           limits:
-            memory: "100Gi"
+            memory: "80Gi"
+            ephemeral-storage: "350Gi"
             cpu: "${cores}"
         env:
           - name: fastq_r1_path

@@ -1,9 +1,9 @@
 data "aws_eks_cluster" "cluster" {
-  name = module.bioinformatics_cluster.cluster_id
+  name = data.terraform_remote_state.eks.outputs.eks_cluster_id
 }
 
 data "aws_eks_cluster_auth" "cluster" {
-  name = module.bioinformatics_cluster.cluster_id
+  name = data.terraform_remote_state.eks.outputs.eks_cluster_id
 }
 
 data "http" "argo_workflow_manifest_url" {
@@ -27,7 +27,3 @@ data "http" "fluentbit_manifest_url" {
 data "kubectl_file_documents" "fluentbit_daemon_manifests" {
   content = data.http.fluentbit_manifest_url.body
 }
-
-# data "kubectl_filename_list" "manifests" {
-#   pattern = "./manifests/*.yaml"
-# }

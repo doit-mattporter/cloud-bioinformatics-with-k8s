@@ -31,7 +31,8 @@ RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud
 # Create FastQC image
 FROM amazonlinux:2
 # Install gsutil
-RUN yum install -y python3
+RUN yum -y install gcc python3 python3-devel python3-setuptools redhat-rpm-config
+RUN pip3 install --no-cache-dir -U crcmod
 COPY --from=gsutil /tmp/google-cloud-sdk/ /usr/local/bin/google-cloud-sdk/
 ENV PATH $PATH:/usr/local/bin/google-cloud-sdk/bin
 ENV gcp_region_var=${gcp_region}

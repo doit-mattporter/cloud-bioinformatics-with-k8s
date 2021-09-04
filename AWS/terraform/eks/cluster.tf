@@ -5,17 +5,18 @@ provider "aws" {
 
 module "bioinformatics_cluster" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "17.1.0"
+  version = "17.9.0"
 
-  cluster_name    = var.eks_cluster_name
+  cluster_name    = data.terraform_remote_state.vpc.outputs.eks_cluster_name
   cluster_version = var.eks_version
 
   vpc_id  = data.terraform_remote_state.vpc.outputs.vpc_id
-  subnets = data.terraform_remote_state.vpc.outputs.vpc_private_subnets
+  # subnets = data.terraform_remote_state.vpc.outputs.vpc_private_subnets
+  subnets = data.terraform_remote_state.vpc.outputs.vpc_public_subnets
 
   cluster_iam_role_name = "EKS-BioinformaticsCluster-Role"
 
-  cluster_endpoint_private_access = true
+  # cluster_endpoint_private_access = true
   cluster_enabled_log_types       = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   workers_group_defaults = {
@@ -30,7 +31,7 @@ module "bioinformatics_cluster" {
       spot_allocation_strategy = "lowest-price"
       spot_instance_pools      = 2
       asg_min_size             = 1
-      asg_max_size             = 20
+      asg_max_size             = 5
       asg_desired_capacity     = 1
       kubelet_extra_args       = "--node-labels=node.kubernetes.io/lifecycle=spot"
       suspended_processes      = ["AZRebalance"]
@@ -41,7 +42,7 @@ module "bioinformatics_cluster" {
       spot_allocation_strategy = "lowest-price"
       spot_instance_pools      = 2
       asg_min_size             = 1
-      asg_max_size             = 20
+      asg_max_size             = 5
       asg_desired_capacity     = 1
       kubelet_extra_args       = "--node-labels=node.kubernetes.io/lifecycle=spot"
       suspended_processes      = ["AZRebalance"]

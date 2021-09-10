@@ -1,0 +1,108 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: fastqc-to-bwa-mem2-workflow-
+  namespace: biojobs
+spec:
+  serviceAccountName: biojobs-sa
+  entrypoint: fastqc-to-bwa-mem2
+  templates:
+  - name: fastqc
+    inputs:
+      parameters:
+      - name: INPUT_FILEPATH
+      - name: OUTPUT_FASTQC_PATH
+    affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nodegroup
+                operator: In
+                values:
+                - spot_small
+    container:
+      image: "us.gcr.io/${GCP_PROJECT_ID}/fastqc"
+      resources:
+          requests:
+            memory: "4Gi"
+            ephemeral-storage: "250Gi"
+            cpu: "1"
+          limits:
+            memory: "12Gi"
+            ephemeral-storage: "250Gi"
+            cpu: "1"
+      env:
+        - name: FASTQ
+          value: "{{inputs.parameters.INPUT_FILEPATH}}"
+        - name: OUTPUT_PATH
+          value: "{{inputs.parameters.OUTPUT_FASTQC_PATH}}"
+  - name: bwa-mem2
+    inputs:
+      parameters:
+      - name: FASTQ_R1_PATH
+      - name: FASTQ_R2_PATH
+      - name: REFERENCE_PATH
+      - name: BAM_FN
+      - name: OUTPUT_BAM_PATH
+    affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nodegroup
+                operator: In
+                values:
+                - spot_large
+    container:
+      image: "us.gcr.io/${GCP_PROJECT_ID}/bwa-mem2"
+      resources:
+        requests:
+          memory: "30Gi"
+          ephemeral-storage: "350Gi"
+          cpu: "${CORES}"
+        limits:
+          memory: "80Gi"
+          ephemeral-storage: "350Gi"
+          cpu: "${CORES}"
+      env:
+        - name: fastq_r1_path
+          value: "{{inputs.parameters.FASTQ_R1_PATH}}"
+        - name: fastq_r2_path
+          value: "{{inputs.parameters.FASTQ_R2_PATH}}"
+        - name: reference_path
+          value: "{{inputs.parameters.REFERENCE_PATH}}"
+        - name: bam_fn
+          value: "{{inputs.parameters.BAM_FN}}"
+        - name: output_path
+          value: "{{inputs.parameters.OUTPUT_BAM_PATH}}"
+        - name: cores
+          value: "${CORES}"
+  - name: fastqc-to-bwa-mem2
+    dag:
+      tasks:
+      - name: fastqc-r1-task
+        template: fastqc
+        arguments:
+          parameters: [
+            {name: INPUT_FILEPATH, value: "${INPUT_FASTQ_R1}"},
+            {name: OUTPUT_FASTQC_PATH, value: "${OUTPUT_FASTQC_PATH}"}
+          ]
+      - name: fastqc-r2-task
+        template: fastqc
+        arguments:
+          parameters: [
+            {name: INPUT_FILEPATH, value: "${INPUT_FASTQ_R2}"},
+            {name: OUTPUT_FASTQC_PATH, value: "${OUTPUT_FASTQC_PATH}"}
+          ]
+      - name: bwa-mem2-task
+        dependencies: [fastqc-r1-task, fastqc-r2-task]
+        template: bwa-mem2
+        arguments:
+          parameters: [
+            {name: FASTQ_R1_PATH, value: "${INPUT_FASTQ_R1}"},
+            {name: FASTQ_R2_PATH, value: "${INPUT_FASTQ_R2}"},
+            {name: REFERENCE_PATH, value: "${REFERENCE_PATH}"},
+            {name: BAM_FN, value: "${BAM_FN}"},
+            {name: OUTPUT_BAM_PATH, value: "${OUTPUT_BAM_PATH}"}
+          ]

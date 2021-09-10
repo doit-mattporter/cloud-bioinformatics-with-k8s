@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: bwamem2-
+  namespace: biojobs
+spec:
+  ttlSecondsAfterFinished: 600
+  activeDeadlineSeconds: 10800
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nodegroup
+                operator: In
+                values:
+                - spot_large
+      containers:
+      containers:
+      - name: bwamem2
+        image: ${AWSID}.dkr.ecr.${REGION}.amazonaws.com/bwa-mem2
+        resources:
+          requests:
+            memory: "30Gi"
+            ephemeral-storage: "350Gi"
+            cpu: "${cores}"
+          limits:
+            memory: "80Gi"
+            ephemeral-storage: "350Gi"
+            cpu: "${cores}"
+        env:
+          - name: fastq_r1_path
+            value: "${fastq_r1_path}"
+          - name: fastq_r2_path
+            value: "${fastq_r2_path}"
+          - name: reference_path
+            value: "${reference_path}"
+          - name: bam_fn
+            value: "${bam_fn}"
+          - name: output_path
+            value: "${output_path}"
+          - name: cores
+            value: "${cores}"
+      restartPolicy: Never
+  backoffLimit: 2
